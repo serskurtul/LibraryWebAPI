@@ -28,6 +28,7 @@ namespace LibraryWebAPI.Controllers
         [HttpGet("books")]
         public async Task<IActionResult> GetAll([FromQuery] string order)
         {
+            
             var books = await _context.Books.ToListAsync();
             var results = _mapper.Map<List<BookDTO>>(books);
             if (order.ToLower() == "author")

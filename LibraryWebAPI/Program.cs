@@ -2,6 +2,7 @@
 using LibraryWebAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.HttpLogging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<BookDbContext>(options => options.UseInMemoryDatabase("BookDB"));
 builder.Services.AddAutoMapper(typeof(AutomapperInitilizer));
+builder.Services.AddHttpLogging(opt =>
+{
+    opt.LoggingFields = HttpLoggingFields.All;
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -21,6 +26,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseHttpLogging();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
