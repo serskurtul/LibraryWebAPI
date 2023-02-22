@@ -83,6 +83,53 @@ namespace LibraryWebAPI.Controllers
             else
                 return StatusCode(500);
         }
+        [HttpPost("books/save")]
+        public async Task<IActionResult> Post([FromBody] UpdateBookDTO bookDTO)
+        {
+            var BookBD = _mapper.Map<Book>(bookDTO);
+            var id = BookBD.Id;
+            if (id == default(int))
+            {
+                id = _context.Books.Add(BookBD).Property<int>(x => x.Id).CurrentValue;
+            }
+            else
+            {
+                _context.Books.Update(BookBD);
+            }
+            var result = await _context.SaveChangesAsync();
+            if (result >= 1)
+                return Ok($"\"id\": \"{id}\"");
+            else
+                return StatusCode(500);
+        }
+        [HttpPut("books/{id:int}/review")]
+        public async Task<IActionResult> SaveReview([FromRoute] int id, [FromBody] CreateReviewDTO reviewDTO)
+        {
+            reviewDTO.BookId = id;
+            var reviewDb = _mapper.Map<Review>(reviewDTO);
+
+            await _context.Reviews.AddAsync(reviewDb);
+
+            var result = await _context.SaveChangesAsync();
+            if (result >= 1)
+                return Ok("\"message\": \"success\"");
+            else
+                return StatusCode(500);
+        }
+        [HttpPut("books/{id:int}/rate")]
+        public async Task<IActionResult> SaveRate([FromRoute] int id, [FromBody] CreateRatingDTO raitingDTO)
+        {
+            raitingDTO.BookId = id;
+            var ratingDb = _mapper.Map<Rating>(raitingDTO);
+
+            await _context.Raitings.AddAsync(ratingDb);
+
+            var result = await _context.SaveChangesAsync();
+            if (result >= 1)
+                return Ok("\"message\": \"success\"");
+            else
+                return StatusCode(500);
+        }
     }
 }
 
