@@ -1,0 +1,47 @@
+﻿<Properties StartupConfiguration="{F4FBA7F5-90EA-45AA-9A3C-92ACCBB931E2}|https">
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.Workbench ActiveDocument="LibraryWebAPI/Controllers/BookController.cs">
+    <Files>
+      <File FileName="LibraryWebAPI/Program.cs" Line="16" Column="1" IsPinned="True" />
+      <File FileName="LibraryWebAPI/Controllers/BookController.cs" Line="44" Column="1" IsPinned="True" />
+      <File FileName="LibraryWebAPI/Data/Models/Book.cs" Line="19" Column="43" />
+      <File FileName="LibraryWebAPI/Data/Models/Review.cs" Line="11" Column="20" />
+      <File FileName="LibraryWebAPI/Data/Models/Rating.cs" Line="12" Column="3" />
+      <File FileName="LibraryWebAPI/Data/ModelsDTO/BookDTO.cs" Line="26" Column="1" />
+      <File FileName="LibraryWebAPI/Data/ModelsDTO/ReviewDTO.cs" Line="14" Column="1" />
+      <File FileName="LibraryWebAPI/Data/ModelsDTO/RatingDTO.cs" Line="8" Column="6" />
+      <File FileName="LibraryWebAPI/Data/BookDbContext.cs" Line="330" Column="28" />
+      <File FileName="LibraryWebAPI/Configurations/AutomapperInitializer.cs" Line="11" Column="4" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="LibraryWebAPI" expanded="True">
+            <Node name="LibraryWebAPI" expanded="True">
+              <Node name="Dependencies" expanded="True" />
+              <Node name="Configurations" expanded="True">
+                <Node name="AutomapperInitializer.cs" selected="True" />
+              </Node>
+              <Node name="Controllers" expanded="True" />
+              <Node name="Data" expanded="True">
+                <Node name="Models" expanded="True" />
+                <Node name="ModelsDTO" expanded="True" />
+              </Node>
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State>
+          <Value>TextToType</Value>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.ItemProperties.LibraryWebAPI PreferredExecutionTarget="/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+</Properties>
