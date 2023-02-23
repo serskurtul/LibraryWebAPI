@@ -1,15 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
-using LibraryWebAPI.Data;
-using LibraryWebAPI.Data.Models;
 using LibraryWebAPI.Data.ModelsDTO;
+using LibraryWebAPI.Data.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using static System.Reflection.Metadata.BlobBuilder;
 
 namespace LibraryWebAPI.Controllers
 {
@@ -17,119 +9,148 @@ namespace LibraryWebAPI.Controllers
     [Route("/api/")]
     public class BooksController : ControllerBase
     {
-        private readonly BookDbContext _context;
-        private readonly IMapper _mapper;
+        private readonly IBookService _bookService;
 
-        public BooksController(BookDbContext context, IMapper mapper)
+        public BooksController(IBookService bookService)
         {
-            _context = context;
-            _mapper = mapper;
+            _bookService = bookService;
         }
         [HttpGet("books")]
         public async Task<IActionResult> GetAll([FromQuery] string order)
         {
-            
-            var books = await _context.Books.ToListAsync();
-            var results = _mapper.Map<List<BookDTO>>(books);
-            if (order.ToLower() == "author")
-                results = results.OrderBy(x => x.Author).ToList();
-            else if (order.ToLower() == "genre")
-                results = results.OrderBy(x => x.Genre).ToList();
-            else
-                return BadRequest();
-            return Ok(results);
+            try
+            {
+                var books = await _bookService.GetAsync();
+
+                if (order.ToLower() == "author")
+                    books = books.OrderBy(x => x.Author).ToList();
+                else if (order.ToLower() == "title")
+                    books = books.OrderBy(x => x.Title).ToList();
+                else
+                    return BadRequest();
+                return Ok(books);
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         [HttpGet("recommended")]
-        public IActionResult GetRecomended([FromQuery] string? genre)
+        public async Task<IActionResult> GetRecommended([FromQuery] string? genre)
         {
-            var books = _context.Books.Include(x => x.Rating).Include(x => x.Reviews).Where(x => x.Reviews.Count > 10 && (genre == null || genre.ToLower() == x.Genre.ToLower())).OrderByDescending(x => x.Rating.Score).Take(10);
+            try
+            {
+                var allBooks = await _bookService.GetAsync(x => x.Reviews.Count > 10 && (genre == null || genre.ToLower() == x.Genre.ToLower()));
 
-            var results = _mapper.Map<List<BookDTO>>(books);
-            
-            return Ok(results);
+                var recommended = allBooks.OrderByDescending(x => x.Rating).Take(10);
+
+                return Ok(recommended);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpGet("books/{id:int}")]
         public async Task<IActionResult> GetByIdWithReviwes([FromRoute] int id)
         {
-            var book = await _context.Books.FirstOrDefaultAsync(x => x.Id == id);
-            if (book == null)
-                return NotFound($"Book with id = {id} not found");
+            try
+            {
+                var book = await _bookService.GetByIdAsync(id);
+                if (book == null)
+                    return NotFound($"Book with id = {id} not found");
 
-            _context.Entry<Book>(book).Collection(x => x.Reviews).Load();
-
-            var result = _mapper.Map<BookReviewDetailsDTO>(book);
-
-            return Ok(result);
+                return Ok(book);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         [HttpDelete("books/{id:int}")]
         public async Task<IActionResult> Delete([FromRoute] int id, [FromQuery] string secretKey)
         {
-            var configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json")
-                .Build();
-            if (secretKey != configuration.GetValue<string>("SecretKey"))
-                return StatusCode(401);
+            try
+            {
+                var configuration = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json")
+                    .Build();
+                if (secretKey != configuration.GetValue<string>("SecretKey"))
+                    return StatusCode(403);
 
-            var bookToDelete = await _context.Books.FirstOrDefaultAsync(x => x.Id == id);
+                var result = await _bookService.DeleteAsync(id);
 
-            if (bookToDelete == null)
-                return NotFound($"Book with id = {id} not found");
-
-            _context.Books.Remove(bookToDelete);
-
-            var result = await _context.SaveChangesAsync();
-            if (result >= 1)
-                return Ok("\"message\": \"success\"");
-            else
-                return StatusCode(500);
+                if (result)
+                    return Ok("\"message\": \"success\"");
+                else
+                    return StatusCode(500);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         [HttpPost("books/save")]
         public async Task<IActionResult> Post([FromBody] UpdateBookDTO bookDTO)
         {
-            var BookBD = _mapper.Map<Book>(bookDTO);
-            var id = BookBD.Id;
-            if (id == default(int))
+            try
             {
-                id = _context.Books.Add(BookBD).Property<int>(x => x.Id).CurrentValue;
+                var id = bookDTO.Id;
+                if (id == default(int))
+                {
+                    id = await _bookService.CreateAsync(bookDTO);
+                }
+                else
+                {
+                    await _bookService.UpdateAsync(bookDTO);
+                }
+
+                if (id != default(int))
+                    return Ok($"\"id\": \"{id}\"");
+                else
+                    return StatusCode(500);
             }
-            else
+            catch (Exception ex)
             {
-                _context.Books.Update(BookBD);
+                return StatusCode(500, ex.Message);
             }
-            var result = await _context.SaveChangesAsync();
-            if (result >= 1)
-                return Ok($"\"id\": \"{id}\"");
-            else
-                return StatusCode(500);
         }
         [HttpPut("books/{id:int}/review")]
         public async Task<IActionResult> SaveReview([FromRoute] int id, [FromBody] CreateReviewDTO reviewDTO)
         {
-            reviewDTO.BookId = id;
-            var reviewDb = _mapper.Map<Review>(reviewDTO);
-
-            await _context.Reviews.AddAsync(reviewDb);
-
-            var result = await _context.SaveChangesAsync();
-            if (result >= 1)
-                return Ok("\"message\": \"success\"");
-            else
-                return StatusCode(500);
+            try
+            {
+                reviewDTO.BookId = id;
+                var result = await _bookService.ReviewBookAsync(reviewDTO);
+                if (result)
+                    return Ok("\"message\": \"success\"");
+                else
+                    return StatusCode(500);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         [HttpPut("books/{id:int}/rate")]
-        public async Task<IActionResult> SaveRate([FromRoute] int id, [FromBody] CreateRatingDTO raitingDTO)
+        public async Task<IActionResult> SaveRate([FromRoute] int id, [FromBody] CreateRatingDTO ratingDTO)
         {
-            raitingDTO.BookId = id;
-            var ratingDb = _mapper.Map<Rating>(raitingDTO);
+            try
+            {
+                ratingDTO.BookId = id;
 
-            await _context.Raitings.AddAsync(ratingDb);
-
-            var result = await _context.SaveChangesAsync();
-            if (result >= 1)
-                return Ok("\"message\": \"success\"");
-            else
-                return StatusCode(500);
+                var result = await _bookService.RateBookAsync(ratingDTO);
+                if (result)
+                    return Ok("\"message\": \"success\"");
+                else
+                    return StatusCode(500);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }
