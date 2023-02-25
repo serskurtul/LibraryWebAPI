@@ -101,16 +101,13 @@ namespace LibraryWebAPI.Controllers
                 if (id == default(int))
                 {
                     id = await _bookService.CreateAsync(bookDTO);
+                    return StatusCode(201,$"\"id\": \"{id}\"");
                 }
                 else
                 {
                     await _bookService.UpdateAsync(bookDTO);
+                    return StatusCode(202, $"\"id\": \"{id}\"");
                 }
-
-                if (id != default(int))
-                    return Ok($"\"id\": \"{id}\"");
-                else
-                    return StatusCode(500);
             }
             catch (Exception ex)
             {
@@ -125,7 +122,7 @@ namespace LibraryWebAPI.Controllers
                 reviewDTO.BookId = id;
                 var result = await _bookService.ReviewBookAsync(reviewDTO);
                 if (result)
-                    return Ok("\"message\": \"success\"");
+                    return StatusCode(202,"\"message\": \"success\"");
                 else
                     return StatusCode(500);
             }
@@ -143,7 +140,7 @@ namespace LibraryWebAPI.Controllers
 
                 var result = await _bookService.RateBookAsync(ratingDTO);
                 if (result)
-                    return Ok("\"message\": \"success\"");
+                    return StatusCode(202, "\"message\": \"success\"");
                 else
                     return StatusCode(500);
             }
